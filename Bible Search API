@@ -1,0 +1,82 @@
+"""
+This script retrieves a specified Bible passage using the Bible API.
+Users can select a Bible version and enter a passage (e.g., John 3:16).
+The script extracts the citation and text of the passage, displays it, 
+saves it to a text file, and visualizes the length of the verses in a bar chart.
+
+Usage:
+1. Run the script in a Jupyter Notebook.
+2. When prompted, enter the Bible version code (e.g., 'web' for World English Bible).
+3. Enter the passage you wish to retrieve (e.g., 'John 3:16').
+4. The citation and text of the passage will be displayed, saved to 'bible_passages.txt', 
+   and a bar chart of the verse lengths will be shown.
+"""
+
+import requests
+import matplotlib.pyplot as plt
+
+def get_bible_passage(version, passage):
+    url = f"https://bible-api.com/{passage}?translation={version}"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        return response.json()  # Return the response as JSON
+    else:
+        print(f"Error: Unable to retrieve passage. Status code: {response.status_code}")
+        return None
+
+def extract_passage_info(passage_data):
+    verses = passage_data['verses']
+    result = []
+    
+    for verse in verses:
+        citation = f"{verse['book_name']} {verse['chapter']}:{verse['verse']}"
+        text = verse['text'].strip()
+        result.append((citation, text))
+    
+    return result
+
+def display_passages(passage_list):
+    for citation, text in passage_list:
+        print(f"Citation: {citation}\n{text}\n{'-'*40}")
+
+def save_passages(passage_list, filename="bible_passages.txt"):
+    with open(filename, 'w') as f:
+        for citation, text in passage_list:
+            f.write(f"{citation}\n{text}\n{'-'*40}\n")
+    print(f"Passages saved to {filename}")
+
+def plot_verse_lengths(passage_list):
+    citations = [citation for citation, _ in passage_list]
+    lengths = [len(text) for _, text in passage_list]
+    
+    plt.barh(citations, lengths, color='skyblue')
+    plt.xlabel('Length of Verse (Characters)')
+    plt.title('Verse Lengths in the Selected Passage')
+    plt.show()
+
+def main():
+    print("Available Bible Versions: ")
+    versions = {
+        "web": "World English Bible",
+        "kjv": "King James Version",
+        "asv": "American Standard Version",
+        "bbe": "Bible in Basic English"
+    }
+    
+    for code, name in versions.items():
+        print(f"{code}: {name}")
+    
+    version = input("Enter the Bible version code: ").strip()
+    passage = input("Enter the passage (e.g., John 3:16): ").strip()
+
+    data = get_bible_passage(version, passage)
+    
+    if data:
+        passage_list = extract_passage_info(data)
+        display_passages(passage_list)
+        save_passages(passage_list)
+        plot_verse_lengths(passage_list)
+
+if __name__ == "__main__":
+    main()
