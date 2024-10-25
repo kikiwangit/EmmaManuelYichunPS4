@@ -1,0 +1,99 @@
+import requests
+
+print("Hello")
+#-----------------------------------
+
+def get_type_pokemon (user_type):
+   
+   url = f"https://pokeapi.co/api/v2/type/{user_type}"
+   type_response = requests.get(url)
+    
+    #Error-catch statement, if query is invalid nothing is returned
+   if type_response.status_code == 200:
+        return type_response.json()  
+   else:
+        print(f"Invalid pokémon type, {type_response.status_code} error")
+        return None
+   
+#-----------------------------------
+
+def get_ability_pokemon (user_ability):
+   url = f"https://pokeapi.co/api/v2/ability/{user_ability}"
+   ability_response = requests.get(url)
+    
+    #Error-catch statement, if query is invalid nothing is returned
+   if ability_response.status_code == 200:
+        return ability_response.json()  
+   else:
+        print(f"Invalid pokémon ability, {ability_response.status_code} error")
+        return None
+   
+#------------------------------------
+
+def save_types (type_response, filename="type.txt"):
+    for mon in type_response["pokemon"]:
+        with open(filename, "a") as f:
+            f.write(mon["pokemon"]["name"])
+            f.write("\n")
+        
+#------------------------------------
+
+def save_abilities (ability_response, filename="ability.txt"):
+    for mon in ability_response["pokemon"]:
+        with open(filename, "a") as f:
+            f.write(mon["pokemon"]["name"])
+            f.write("\n")
+            
+#------------------------------------
+
+def ability_and_type (type_file, ability_file):
+    type_mons =  set(open(type_file).read().split())
+    ability_mons =  set(open(ability_file).read().split())
+    
+    final_results = type_mons.intersection(ability_mons)
+    
+    return final_results
+    
+#------------------------------------
+
+def main():
+  print("This tool finds all pokémon of a desired type capable of a desired ability")
+  print("Types include: normal, fire, fighting, water, flying, grass, poison, electric, ground, psychic, rock, ice, bug, dragon, ghost, dark, steel, and fairy")
+  print("Abilities include, but are not limited to: intimidate, battle-armor, unaware, shadow-tag, sturdy, swift-swim, levitate, and chlorophyll")
+
+  while True:
+    
+    #Queries user for type response, if api deems query invalid, the user is prompted again
+    user_type = input("Enter desired type: ")
+    type_response = get_type_pokemon (user_type)
+    if not type_response:
+        continue
+    
+    #Queries user for type response, if api deems query invalid, the user is prompted again
+    user_ability = input("Enter desired ability:")
+    ability_response = get_ability_pokemon (user_ability)
+    if not ability_response:
+        continue
+
+    #The pokemon names are seperated from the other junk returned in the query, and saved into a new file
+    save_types(type_response)
+    save_abilities(ability_response)
+    
+    #The lists are compared, and pokemon with the desired type and ability are returned
+    final_results = ability_and_type("type.txt", "ability.txt" )
+    
+    #If no pokemon possessed the combo, an error is given. Otherwise, the pokemon are listed.
+    if len(final_results) == 0:
+        print("No pokémon possesses the type/ability combo you are looking for")
+    else:
+        print("The following pokémon possess the type/ability combo you are looking for: ")
+        for mon in final_results:
+            print(mon)
+        
+
+   
+    break
+
+if __name__ == "__main__":
+    main()
+
